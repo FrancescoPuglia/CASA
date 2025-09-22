@@ -928,11 +928,29 @@
             measurementId: "G-PWHP7JVQL1"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
+        // Initialize Firebase with error checking
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log('Firebase inizializzato correttamente');
+        } catch (error) {
+            console.error('ERRORE inizializzazione Firebase:', error);
+            alert('⚠️ ERRORE: Problema con la configurazione Firebase. Controlla la console (F12) per dettagli.');
+        }
+        
         const database = firebase.database();
         const tasksRef = database.ref('tasks');
         const activitiesRef = database.ref('activities');
+        
+        // Test Firebase connection immediately
+        database.ref('.info/connected').on('value', (snapshot) => {
+            const connected = snapshot.val();
+            console.log('Stato connessione Firebase:', connected);
+            if (connected) {
+                console.log('✅ Connesso a Firebase');
+            } else {
+                console.log('❌ Non connesso a Firebase');
+            }
+        });
 
         // Global State
         const state = {
@@ -954,26 +972,65 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('Inizializzazione Casa Manager...');
             setDefaultDateTime();
+            
+            // Check Firebase connection with timeout
+            const timeout = setTimeout(() => {
+                if (state.tasks.length === 0 && state.activities.length === 0) {
+                    console.error('Timeout connessione Firebase');
+                    updateSyncStatus(false);
+                    
+                    // Show error message
+                    document.getElementById('statsGrid').innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff4757;">
+                            <h3>⚠️ Problema di Connessione</h3>
+                            <p>Non riesco a connettermi a Firebase.</p>
+                            <p style="margin-top: 20px;"><strong>Soluzioni:</strong></p>
+                            <ol style="text-align: left; max-width: 500px; margin: 20px auto;">
+                                <li>Vai su Firebase Console → Realtime Database → Rules</li>
+                                <li>Imposta le regole su: ".read": true, ".write": true</li>
+                                <li>Clicca "Pubblica"</li>
+                                <li>Ricarica questa pagina (F5)</li>
+                            </ol>
+                        </div>
+                    `;
+                }
+            }, 10000); // 10 seconds timeout
+            
             setupRealtimeListeners();
             initializeDefaultActivities();
         });
 
         // Initialize default activities if none exist
         function initializeDefaultActivities() {
+            console.log('Controllo attività predefinite...');
             activitiesRef.once('value', (snapshot) => {
                 if (!snapshot.val()) {
+                    console.log('Nessuna attività trovata, creo quelle predefinite...');
                     defaultActivities.forEach(activity => {
-                        activitiesRef.push(activity);
+                        activitiesRef.push(activity)
+                            .then(() => console.log('Attività creata:', activity.name))
+                            .catch(err => console.error('Errore creazione attività:', err));
                     });
+                } else {
+                    console.log('Attività esistenti trovate:', snapshot.val());
+                }
+            }).catch(error => {
+                console.error('ERRORE nel controllo attività:', error);
+                if (error.code === 'PERMISSION_DENIED') {
+                    alert('⚠️ ERRORE PERMESSI: Vai su Firebase → Realtime Database → Rules e imposta ".read": true, ".write": true');
                 }
             });
         }
 
         // Setup real-time listeners
         function setupRealtimeListeners() {
-            // Listen for tasks
+            console.log('Inizializzazione listeners Firebase...');
+            
+            // Listen for tasks with better error handling
             tasksRef.on('value', (snapshot) => {
+                console.log('Tasks snapshot ricevuto:', snapshot.val());
                 const data = snapshot.val();
                 if (data) {
                     state.tasks = Object.entries(data).map(([id, task]) => ({
@@ -986,12 +1043,23 @@
                 updateDisplay();
                 updateSyncStatus(true);
             }, (error) => {
-                console.error('Firebase error:', error);
+                console.error('ERRORE Firebase tasks:', error);
+                console.error('Dettagli errore:', error.code, error.message);
                 updateSyncStatus(false);
+                
+                // Mostra errore all'utente
+                if (error.code === 'PERMISSION_DENIED') {
+                    alert('⚠️ ERRORE: Permessi negati! Vai su Firebase Console → Realtime Database → Rules e imposta ".read": true, ".write": true');
+                }
+                
+                // Fallback to empty state
+                state.tasks = [];
+                updateDisplay();
             });
 
-            // Listen for activities
+            // Listen for activities with better error handling
             activitiesRef.on('value', (snapshot) => {
+                console.log('Activities snapshot ricevuto:', snapshot.val());
                 const data = snapshot.val();
                 if (data) {
                     state.activities = Object.entries(data).map(([id, activity]) => ({
@@ -999,8 +1067,15 @@
                         id: id
                     }));
                 } else {
-                    state.activities = defaultActivities.map((a, i) => ({...a, id: i}));
+                    // Use default activities if none exist
+                    state.activities = defaultActivities.map((a, i) => ({...a, id: `default_${i}`}));
                 }
+                loadTaskOptions();
+                loadActivitiesList();
+            }, (error) => {
+                console.error('ERRORE Firebase activities:', error);
+                // Use default activities on error
+                state.activities = defaultActivities.map((a, i) => ({...a, id: `default_${i}`}));
                 loadTaskOptions();
                 loadActivitiesList();
             });
@@ -1009,11 +1084,18 @@
         // Load task options in modal
         function loadTaskOptions() {
             const container = document.getElementById('taskIcons');
+            if (!container) return;
+            
+            if (state.activities.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Nessuna attività disponibile. Aggiungine una dal menu "Gestisci Attività".</div>';
+                return;
+            }
+            
             container.innerHTML = state.activities.map(activity => `
                 <div class="task-option" onclick="selectTask('${activity.id}', this)">
-                    <div class="icon">${activity.icon}</div>
+                    <div class="icon">${activity.icon || '📌'}</div>
                     <div class="label">${activity.name}</div>
-                    <div class="points">🏆 ${activity.points} punti</div>
+                    <div class="points">🏆 ${activity.points || 0} punti</div>
                 </div>
             `).join('');
         }
@@ -1021,11 +1103,18 @@
         // Load activities list in management modal
         function loadActivitiesList() {
             const container = document.getElementById('activitiesList');
+            if (!container) return;
+            
+            if (state.activities.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Nessuna attività configurata.</div>';
+                return;
+            }
+            
             container.innerHTML = state.activities.map(activity => `
                 <div class="activity-item">
                     <div class="activity-info">
-                        <div class="activity-name">${activity.icon} ${activity.name}</div>
-                        <div class="activity-points">🏆 ${activity.points} punti</div>
+                        <div class="activity-name">${activity.icon || '📌'} ${activity.name}</div>
+                        <div class="activity-points">🏆 ${activity.points || 0} punti</div>
                     </div>
                     <div class="activity-actions">
                         <button class="remove-btn" onclick="removeActivity('${activity.id}')">
@@ -1087,9 +1176,20 @@
             if (connected) {
                 statusEl.textContent = '✅ Connesso a Firebase - Sincronizzazione in tempo reale';
                 statusEl.className = 'sync-status';
+                infoBox.textContent = '🚀 Sistema con punteggi! I punti vengono divisi equamente tra chi collabora!';
+                infoBox.style.background = 'linear-gradient(135deg, #4CAF50, #8BC34A)';
             } else {
-                statusEl.textContent = '⚠️ Modalità Offline - Riconnessione in corso...';
+                statusEl.textContent = '⚠️ ERRORE: Controlla le regole Firebase (vedi sotto)';
                 statusEl.className = 'sync-status error';
+                infoBox.innerHTML = `
+                    <strong>📍 SOLUZIONE RAPIDA:</strong><br>
+                    1. Vai su <a href="https://console.firebase.google.com" target="_blank" style="color: white; text-decoration: underline;">Firebase Console</a><br>
+                    2. Seleziona il tuo progetto "casa-30989"<br>
+                    3. Vai su "Realtime Database" → "Rules"<br>
+                    4. Sostituisci tutto con: <code style="background: rgba(0,0,0,0.2); padding: 2px 5px; border-radius: 3px;">{ "rules": { ".read": true, ".write": true } }</code><br>
+                    5. Clicca "Pubblica" e ricarica questa pagina
+                `;
+                infoBox.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a6f)';
             }
         }
 
@@ -1119,7 +1219,11 @@
         }
 
         function selectTask(activityId, element) {
-            const activity = state.activities.find(a => a.id === activityId);
+            const activity = state.activities.find(a => a.id == activityId);
+            if (!activity) {
+                console.error('Attività non trovata:', activityId);
+                return;
+            }
             state.selectedTask = activity;
             document.querySelectorAll('.task-option').forEach(opt => opt.classList.remove('selected'));
             element.classList.add('selected');
