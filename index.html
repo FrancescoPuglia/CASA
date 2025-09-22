@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casa Manager - Gestione Lavori Domestici</title>
+    <title>Casa Manager - Gestione Lavori e Punti</title>
     <style>
         * {
             margin: 0;
@@ -97,20 +97,31 @@
             transform: scale(1.1) rotate(5deg);
         }
 
-        .add-task-btn {
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .add-task-btn, .manage-activities-btn {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             border: none;
-            padding: 15px 40px;
+            padding: 15px 30px;
             border-radius: 50px;
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
             cursor: pointer;
-            margin: 20px auto;
-            display: block;
             box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
             transition: all 0.3s ease;
             animation: pulse 2s infinite;
+        }
+
+        .manage-activities-btn {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            animation: none;
         }
 
         @keyframes pulse {
@@ -119,7 +130,7 @@
             100% { transform: scale(1); }
         }
 
-        .add-task-btn:hover {
+        .add-task-btn:hover, .manage-activities-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 40px rgba(245, 87, 108, 0.5);
         }
@@ -153,7 +164,7 @@
             border-radius: 25px;
             padding: 40px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -176,6 +187,9 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin: 25px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
         }
 
         .task-option {
@@ -210,6 +224,16 @@
         .task-option .label {
             font-weight: bold;
             font-size: 1.1em;
+        }
+
+        .task-option .points {
+            font-size: 0.9em;
+            margin-top: 5px;
+            opacity: 0.8;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 2px 8px;
+            display: inline-block;
         }
 
         .people-selector {
@@ -264,7 +288,7 @@
             margin: 20px 0;
         }
 
-        input[type="date"], input[type="time"] {
+        input[type="date"], input[type="time"], input[type="text"], input[type="number"] {
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 10px;
@@ -272,7 +296,7 @@
             transition: all 0.3s ease;
         }
 
-        input[type="date"]:focus, input[type="time"]:focus {
+        input[type="date"]:focus, input[type="time"]:focus, input[type="text"]:focus, input[type="number"]:focus {
             border-color: #667eea;
             outline: none;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -364,12 +388,28 @@
 
         .stat-card h3 {
             font-size: 1.5em;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #333;
         }
 
         .stat-card.leader h3 {
             color: white;
+        }
+
+        .points-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .leader .points-display {
+            background: white;
+            -webkit-text-fill-color: white;
         }
 
         .stat-details {
@@ -450,6 +490,17 @@
             margin-bottom: 10px;
         }
 
+        .task-points-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
         .task-meta {
             display: flex;
             gap: 20px;
@@ -479,18 +530,23 @@
         }
 
         .delete-btn {
-            background: linear-gradient(135deg, #f5576c, #f093fb);
+            background: linear-gradient(135deg, #ff4757, #ff6348);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
+            padding: 12px 20px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .delete-btn:hover {
             transform: scale(1.1);
-            box-shadow: 0 10px 20px rgba(245, 87, 108, 0.3);
+            box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
         }
 
         .report-section {
@@ -598,6 +654,93 @@
             box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
         }
 
+        .activities-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+
+        .activity-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .activity-info {
+            flex: 1;
+        }
+
+        .activity-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .activity-points {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .activity-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-btn, .remove-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #5a6fd8;
+            transform: scale(1.05);
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+        }
+
+        .remove-btn:hover {
+            background: #ff3838;
+            transform: scale(1.05);
+        }
+
+        .add-activity-form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+        }
+
         .loading {
             text-align: center;
             padding: 20px;
@@ -629,6 +772,8 @@
             .task-icons { grid-template-columns: 1fr; }
             .datetime-input { grid-template-columns: 1fr; }
             .report-header { flex-direction: column; }
+            .action-buttons { flex-direction: column; width: 100%; }
+            .add-task-btn, .manage-activities-btn { width: 100%; }
         }
     </style>
 </head>
@@ -644,9 +789,14 @@
                 <div class="person-badge">Giovanni</div>
                 <div class="person-badge">Veronica</div>
             </div>
-            <button class="add-task-btn" onclick="openModal()">
-                ✨ Aggiungi Nuovo Lavoro ✨
-            </button>
+            <div class="action-buttons">
+                <button class="add-task-btn" onclick="openModal()">
+                    ✨ Aggiungi Nuovo Lavoro ✨
+                </button>
+                <button class="manage-activities-btn" onclick="openActivitiesModal()">
+                    ⚙️ Gestisci Attività e Punti
+                </button>
+            </div>
         </div>
 
         <!-- Report Section -->
@@ -682,32 +832,17 @@
 
         <!-- Info Box -->
         <div class="info-box" id="infoBox">
-            🚀 Sistema connesso a Firebase! Tutti vedono gli stessi dati in tempo reale!
+            🚀 Sistema con punteggi! I punti vengono divisi equamente tra chi collabora!
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Task Modal -->
     <div class="modal" id="taskModal">
         <div class="modal-content">
             <h2>🎯 Registra Nuovo Lavoro</h2>
             
             <div class="task-icons" id="taskIcons">
-                <div class="task-option" onclick="selectTask('Prendere l\'acqua', this)">
-                    <div class="icon">💧</div>
-                    <div class="label">Prendere l'acqua</div>
-                </div>
-                <div class="task-option" onclick="selectTask('Fare la spesa', this)">
-                    <div class="icon">🛒</div>
-                    <div class="label">Fare la spesa</div>
-                </div>
-                <div class="task-option" onclick="selectTask('Portare a spasso i cani', this)">
-                    <div class="icon">🐕</div>
-                    <div class="label">Portare a spasso i cani</div>
-                </div>
-                <div class="task-option" onclick="selectTask('Cucinare', this)">
-                    <div class="icon">👨‍🍳</div>
-                    <div class="label">Cucinare</div>
-                </div>
+                <!-- Tasks will be loaded dynamically -->
             </div>
 
             <div class="people-selector">
@@ -721,7 +856,7 @@
             </div>
 
             <div class="people-selector">
-                <h3>Con chi? (Opzionale)</h3>
+                <h3>Con chi? (Opzionale - il punteggio verrà diviso)</h3>
                 <div class="people-grid" id="collabGrid">
                     <!-- Will be populated dynamically -->
                 </div>
@@ -741,12 +876,47 @@
         </div>
     </div>
 
+    <!-- Activities Management Modal -->
+    <div class="modal" id="activitiesModal">
+        <div class="modal-content">
+            <h2>⚙️ Gestisci Attività e Punti</h2>
+            
+            <div class="add-activity-form">
+                <h3>Aggiungi Nuova Attività</h3>
+                <div class="form-group">
+                    <label>Nome Attività:</label>
+                    <input type="text" id="newActivityName" placeholder="es. Pulire il bagno">
+                </div>
+                <div class="form-group">
+                    <label>Icona (emoji):</label>
+                    <input type="text" id="newActivityIcon" placeholder="es. 🧹" maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label>Punti:</label>
+                    <input type="number" id="newActivityPoints" placeholder="es. 10" min="1">
+                </div>
+                <button class="submit-btn" onclick="addActivity()">
+                    ➕ Aggiungi Attività
+                </button>
+            </div>
+
+            <h3>Attività Esistenti</h3>
+            <div class="activities-list" id="activitiesList">
+                <!-- Activities will be loaded here -->
+            </div>
+
+            <button class="cancel-btn" onclick="closeActivitiesModal()">
+                Chiudi
+            </button>
+        </div>
+    </div>
+
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <script>
-        // Firebase Configuration - LA TUA CONFIGURAZIONE
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD-0deBcY-fa7dn1ujUC1DQRbTNl5MFP6A",
             authDomain: "casa-30989.firebaseapp.com",
@@ -762,24 +932,47 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const tasksRef = database.ref('tasks');
+        const activitiesRef = database.ref('activities');
 
         // Global State
         const state = {
             tasks: [],
-            selectedTask: '',
+            activities: [],
+            selectedTask: null,
             selectedMainPerson: '',
             selectedCollaborators: [],
             reportPeriod: 'settimana'
         };
 
+        // Default activities with points
+        const defaultActivities = [
+            { name: "Prendere l'acqua", icon: "💧", points: 5 },
+            { name: "Fare la spesa", icon: "🛒", points: 15 },
+            { name: "Portare a spasso i cani", icon: "🐕", points: 10 },
+            { name: "Cucinare", icon: "👨‍🍳", points: 20 }
+        ];
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             setDefaultDateTime();
-            setupRealtimeListener();
+            setupRealtimeListeners();
+            initializeDefaultActivities();
         });
 
-        // Setup real-time listener for Firebase
-        function setupRealtimeListener() {
+        // Initialize default activities if none exist
+        function initializeDefaultActivities() {
+            activitiesRef.once('value', (snapshot) => {
+                if (!snapshot.val()) {
+                    defaultActivities.forEach(activity => {
+                        activitiesRef.push(activity);
+                    });
+                }
+            });
+        }
+
+        // Setup real-time listeners
+        function setupRealtimeListeners() {
+            // Listen for tasks
             tasksRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -795,22 +988,95 @@
             }, (error) => {
                 console.error('Firebase error:', error);
                 updateSyncStatus(false);
-                // Fallback to localStorage
-                loadLocalTasks();
+            });
+
+            // Listen for activities
+            activitiesRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    state.activities = Object.entries(data).map(([id, activity]) => ({
+                        ...activity,
+                        id: id
+                    }));
+                } else {
+                    state.activities = defaultActivities.map((a, i) => ({...a, id: i}));
+                }
+                loadTaskOptions();
+                loadActivitiesList();
             });
         }
 
-        // Local storage fallback
-        function loadLocalTasks() {
-            const saved = localStorage.getItem('casaManagerTasks');
-            if (saved) {
-                state.tasks = JSON.parse(saved);
-                updateDisplay();
-            }
+        // Load task options in modal
+        function loadTaskOptions() {
+            const container = document.getElementById('taskIcons');
+            container.innerHTML = state.activities.map(activity => `
+                <div class="task-option" onclick="selectTask('${activity.id}', this)">
+                    <div class="icon">${activity.icon}</div>
+                    <div class="label">${activity.name}</div>
+                    <div class="points">🏆 ${activity.points} punti</div>
+                </div>
+            `).join('');
         }
 
-        function saveLocalTasks() {
-            localStorage.setItem('casaManagerTasks', JSON.stringify(state.tasks));
+        // Load activities list in management modal
+        function loadActivitiesList() {
+            const container = document.getElementById('activitiesList');
+            container.innerHTML = state.activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <div class="activity-name">${activity.icon} ${activity.name}</div>
+                        <div class="activity-points">🏆 ${activity.points} punti</div>
+                    </div>
+                    <div class="activity-actions">
+                        <button class="remove-btn" onclick="removeActivity('${activity.id}')">
+                            🗑️ Elimina
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add new activity
+        function addActivity() {
+            const name = document.getElementById('newActivityName').value.trim();
+            const icon = document.getElementById('newActivityIcon').value.trim() || '📌';
+            const points = parseInt(document.getElementById('newActivityPoints').value) || 10;
+
+            if (!name) {
+                alert('Inserisci il nome dell\'attività!');
+                return;
+            }
+
+            const newActivity = {
+                name: name,
+                icon: icon,
+                points: points
+            };
+
+            activitiesRef.push(newActivity)
+                .then(() => {
+                    document.getElementById('newActivityName').value = '';
+                    document.getElementById('newActivityIcon').value = '';
+                    document.getElementById('newActivityPoints').value = '';
+                    showSuccessAnimation('Attività aggiunta con successo!');
+                })
+                .catch((error) => {
+                    console.error('Error adding activity:', error);
+                    alert('Errore nell\'aggiunta dell\'attività');
+                });
+        }
+
+        // Remove activity
+        function removeActivity(activityId) {
+            if (!confirm('Sei sicuro di voler eliminare questa attività?')) return;
+            
+            activitiesRef.child(activityId).remove()
+                .then(() => {
+                    showSuccessAnimation('Attività eliminata!');
+                })
+                .catch((error) => {
+                    console.error('Error removing activity:', error);
+                });
         }
 
         // Sync status indicator
@@ -821,13 +1087,9 @@
             if (connected) {
                 statusEl.textContent = '✅ Connesso a Firebase - Sincronizzazione in tempo reale';
                 statusEl.className = 'sync-status';
-                infoBox.textContent = '🚀 Sistema connesso! Tutti vedono gli stessi dati in tempo reale!';
-                infoBox.style.background = 'linear-gradient(135deg, #4CAF50, #8BC34A)';
             } else {
-                statusEl.textContent = '⚠️ Modalità Offline - Dati salvati localmente';
+                statusEl.textContent = '⚠️ Modalità Offline - Riconnessione in corso...';
                 statusEl.className = 'sync-status error';
-                infoBox.textContent = '📱 Modalità offline - I dati sono salvati solo su questo dispositivo';
-                infoBox.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a6f)';
             }
         }
 
@@ -842,14 +1104,23 @@
             resetForm();
         }
 
+        function openActivitiesModal() {
+            document.getElementById('activitiesModal').classList.add('active');
+        }
+
+        function closeActivitiesModal() {
+            document.getElementById('activitiesModal').classList.remove('active');
+        }
+
         function setDefaultDateTime() {
             const now = new Date();
             document.getElementById('taskDate').value = now.toISOString().split('T')[0];
             document.getElementById('taskTime').value = now.toTimeString().slice(0, 5);
         }
 
-        function selectTask(task, element) {
-            state.selectedTask = task;
+        function selectTask(activityId, element) {
+            const activity = state.activities.find(a => a.id === activityId);
+            state.selectedTask = activity;
             document.querySelectorAll('.task-option').forEach(opt => opt.classList.remove('selected'));
             element.classList.add('selected');
             checkFormValidity();
@@ -897,6 +1168,20 @@
             submitBtn.disabled = !state.selectedTask || !state.selectedMainPerson;
         }
 
+        // Calculate points distribution
+        function calculatePointsDistribution(basePoints, mainPerson, collaborators) {
+            const totalPeople = 1 + collaborators.length;
+            const pointsPerPerson = basePoints / totalPeople;
+            
+            const distribution = {};
+            distribution[mainPerson] = pointsPerPerson;
+            collaborators.forEach(person => {
+                distribution[person] = pointsPerPerson;
+            });
+            
+            return distribution;
+        }
+
         // Submit task to Firebase
         function submitTask() {
             if (!state.selectedTask || !state.selectedMainPerson) return;
@@ -904,8 +1189,17 @@
             const date = document.getElementById('taskDate').value;
             const time = document.getElementById('taskTime').value;
             
+            const pointsDistribution = calculatePointsDistribution(
+                state.selectedTask.points,
+                state.selectedMainPerson,
+                state.selectedCollaborators
+            );
+
             const newTask = {
-                task: state.selectedTask,
+                task: state.selectedTask.name,
+                taskIcon: state.selectedTask.icon,
+                basePoints: state.selectedTask.points,
+                pointsDistribution: pointsDistribution,
                 mainPerson: state.selectedMainPerson,
                 collaborators: [...state.selectedCollaborators],
                 date: date,
@@ -914,41 +1208,33 @@
                 createdAt: firebase.database.ServerValue.TIMESTAMP
             };
 
-            // Try to save to Firebase
             tasksRef.push(newTask)
                 .then(() => {
-                    showSuccessAnimation();
+                    showSuccessAnimation('Lavoro registrato con successo!');
                     closeModal();
                 })
                 .catch((error) => {
-                    console.error('Error saving to Firebase:', error);
-                    // Fallback to local storage
-                    newTask.id = Date.now();
-                    newTask.createdAt = Date.now();
-                    state.tasks.push(newTask);
-                    saveLocalTasks();
-                    updateDisplay();
-                    showSuccessAnimation('Salvato localmente (offline)');
-                    closeModal();
+                    console.error('Error saving task:', error);
+                    alert('Errore nel salvare il lavoro');
                 });
         }
 
-        // Delete task from Firebase
+        // Delete task
         function deleteTask(taskId) {
-            if (!confirm('Sei sicuro di voler eliminare questo lavoro?')) return;
+            if (!confirm('⚠️ Sei sicuro di voler ELIMINARE questo lavoro? I punti verranno sottratti.')) return;
             
             tasksRef.child(taskId).remove()
+                .then(() => {
+                    showSuccessAnimation('Lavoro eliminato!');
+                })
                 .catch((error) => {
-                    console.error('Error deleting from Firebase:', error);
-                    // Fallback to local deletion
-                    state.tasks = state.tasks.filter(t => t.id !== taskId);
-                    saveLocalTasks();
-                    updateDisplay();
+                    console.error('Error deleting task:', error);
+                    alert('Errore nell\'eliminare il lavoro');
                 });
         }
 
         function resetForm() {
-            state.selectedTask = '';
+            state.selectedTask = null;
             state.selectedMainPerson = '';
             state.selectedCollaborators = [];
             document.querySelectorAll('.task-option').forEach(opt => opt.classList.remove('selected'));
@@ -999,12 +1285,13 @@
                     totale: 0,
                     solo: 0,
                     conAltri: 0,
+                    punti: 0,
                     lavori: {}
                 };
             });
             
             filtered.forEach(task => {
-                // Main person stats
+                // Count tasks
                 stats[task.mainPerson].totale++;
                 if (task.collaborators.length === 0) {
                     stats[task.mainPerson].solo++;
@@ -1012,12 +1299,21 @@
                     stats[task.mainPerson].conAltri++;
                 }
                 
+                // Count points
+                if (task.pointsDistribution) {
+                    Object.entries(task.pointsDistribution).forEach(([person, points]) => {
+                        if (stats[person]) {
+                            stats[person].punti += points;
+                        }
+                    });
+                }
+                
+                // Track task types
                 if (!stats[task.mainPerson].lavori[task.task]) {
                     stats[task.mainPerson].lavori[task.task] = 0;
                 }
                 stats[task.mainPerson].lavori[task.task]++;
                 
-                // Collaborators stats
                 task.collaborators.forEach(person => {
                     stats[person].totale++;
                     stats[person].conAltri++;
@@ -1041,13 +1337,13 @@
         function updateStats() {
             const stats = getStatistics();
             const people = ['Francesco', 'Sofia', 'Giovanni', 'Veronica'];
-            const leader = people.reduce((a, b) => stats[a].totale > stats[b].totale ? a : b);
+            const leader = people.reduce((a, b) => stats[a].punti > stats[b].punti ? a : b);
             
             const statsGrid = document.getElementById('statsGrid');
             statsGrid.innerHTML = '';
             
             people.forEach(person => {
-                const isLeader = person === leader && stats[person].totale > 0;
+                const isLeader = person === leader && stats[person].punti > 0;
                 const card = document.createElement('div');
                 card.className = `stat-card ${isLeader ? 'leader' : ''}`;
                 
@@ -1060,6 +1356,7 @@
                 card.innerHTML = `
                     ${isLeader ? '<div class="crown">👑</div>' : ''}
                     <h3>${person}</h3>
+                    <div class="points-display">🏆 ${Math.round(stats[person].punti)} punti</div>
                     <div class="stat-details">
                         <div class="stat-row">
                             <span>Totale lavori:</span>
@@ -1100,17 +1397,29 @@
                 const dateStr = date.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
                 const timeStr = task.time;
                 
+                const pointsInfo = task.pointsDistribution 
+                    ? Object.entries(task.pointsDistribution)
+                        .map(([person, points]) => `${person}: ${Math.round(points)}`)
+                        .join(', ')
+                    : '';
+                
                 return `
                     <div class="task-item">
                         <div class="task-info">
-                            <div class="task-type">${getTaskIcon(task.task)} ${task.task}</div>
+                            <div class="task-type">
+                                ${task.taskIcon || '📌'} ${task.task}
+                                <span class="task-points-badge">🏆 ${task.basePoints || 0} punti totali</span>
+                            </div>
                             <div class="task-meta">
                                 <span class="task-person">${task.mainPerson}</span>
                                 ${task.collaborators.map(c => `<span class="task-collaborator">+ ${c}</span>`).join('')}
                                 <span class="task-time">📅 ${dateStr} - 🕐 ${timeStr}</span>
                             </div>
+                            ${pointsInfo ? `<div style="margin-top: 10px; font-size: 0.9em; color: #666;">Punti distribuiti: ${pointsInfo}</div>` : ''}
                         </div>
-                        <button class="delete-btn" onclick="deleteTask('${task.id}')">🗑️</button>
+                        <button class="delete-btn" onclick="deleteTask('${task.id}')">
+                            🗑️ Elimina
+                        </button>
                     </div>
                 `;
             }).join('');
@@ -1120,8 +1429,9 @@
             const filtered = getFilteredTasks();
             const stats = getStatistics();
             const people = ['Francesco', 'Sofia', 'Giovanni', 'Veronica'];
-            const leader = people.reduce((a, b) => stats[a].totale > stats[b].totale ? a : b);
+            const leader = people.reduce((a, b) => stats[a].punti > stats[b].punti ? a : b);
             
+            const totalPoints = people.reduce((sum, person) => sum + stats[person].punti, 0);
             const collaborativeTasks = filtered.filter(t => t.collaborators.length > 0).length;
             const soloTasks = filtered.filter(t => t.collaborators.length === 0).length;
             
@@ -1132,31 +1442,26 @@
                     <div class="label">Lavori Totali</div>
                 </div>
                 <div class="summary-stat">
-                    <div class="number">${stats[leader].totale > 0 ? leader : '-'}</div>
-                    <div class="label">Più Attivo</div>
+                    <div class="number">${Math.round(totalPoints)}</div>
+                    <div class="label">Punti Totali</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="number">${stats[leader].punti > 0 ? leader : '-'}</div>
+                    <div class="label">Leader 👑</div>
                 </div>
                 <div class="summary-stat">
                     <div class="number">${collaborativeTasks}</div>
                     <div class="label">In Collaborazione</div>
                 </div>
-                <div class="summary-stat">
-                    <div class="number">${soloTasks}</div>
-                    <div class="label">Individuali</div>
-                </div>
             `;
         }
 
-        function getTaskIcon(task) {
-            const icons = {
-                "Prendere l'acqua": "💧",
-                "Fare la spesa": "🛒",
-                "Portare a spasso i cani": "🐕",
-                "Cucinare": "👨‍🍳"
-            };
-            return icons[task] || "📌";
+        function getTaskIcon(taskName) {
+            const activity = state.activities.find(a => a.name === taskName);
+            return activity ? activity.icon : '📌';
         }
 
-        function showSuccessAnimation(message = 'Lavoro registrato con successo!') {
+        function showSuccessAnimation(message = 'Operazione completata!') {
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
